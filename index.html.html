@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Cerdas Petani Kopi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar for recommendations */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#f3f0e7] text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto mb-8 text-center">
+        <h1 class="text-3xl md:text-5xl font-bold text-[#4a3623] mb-4 flex items-center justify-center gap-3">
+            <i class="fas fa-leaf text-green-600"></i>
+            Kalkulator Cerdas Petani Kopi
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            Simulasi mandiri penentuan Mutu (Grade) SNI 01-2907-2008. Masukkan jumlah biji cacat dari <b>300 gram sampel</b> kopi beras (green bean) Anda.
+        </p>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- KOLOM KIRI: Input Form -->
+        <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Panel Input Biji Cacat -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 border-t-4 border-[#8b5a2b]">
+                <h2 class="text-xl font-bold text-[#4a3623] mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                    Temuan Biji Cacat (Per 300 Gram)
+                </h2>
+                
+                <div id="defects-container" class="space-y-4">
+                    <!-- Javascript will populate this area -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Kadar Air -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Kadar Air (%)</label>
+                    <div class="flex items-center gap-3">
+                        <input 
+                            type="range" 
+                            id="moisture-slider"
+                            min="9" max="20" step="0.5"
+                            value="12"
+                            class="w-full accent-blue-600"
+                        />
+                        <span id="moisture-display" class="font-bold text-lg text-green-600">12%</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Standar SNI Maks 12.5%</p>
+                </div>
+
+                <!-- Estimasi Panen -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Estimasi Panen (Kg)</label>
+                    <input 
+                        type="number" 
+                        id="harvest-input"
+                        value="1000"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-lg font-semibold"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- KOLOM KANAN: Dashboard Hasil & Analisis -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Panel Hasil Grade -->
+            <div class="bg-gradient-to-br from-[#2c3e50] to-[#1a252f] text-white rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i class="fas fa-leaf" style="font-size: 100px;"></i>
+                </div>
+                
+                <h2 class="text-sm uppercase tracking-wider font-semibold text-gray-300 mb-2">Hasil Evaluasi Mutu SNI</h2>
+                <div class="flex items-end gap-4 mb-6">
+                    <div id="grade-main" class="text-5xl font-extrabold text-[#f39c12] tracking-tight drop-shadow-md">
+                        Mutu 1
+                    </div>
+                    <div id="grade-sub" class="text-xl text-gray-300 pb-1">
+                        (Grade 1)
+                    </div>
+                </div>
+
+                <div class="bg-white/10 rounded-xl p-4 flex justify-between items-center backdrop-blur-sm">
+                    <div>
+                        <p class="text-xs text-gray-400">Total Nilai Cacat</p>
+                        <p id="total-defect-display" class="text-2xl font-bold">0.00</p>
+                    </div>
+                    <div class="h-10 w-px bg-white/20"></div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">Status Kadar Air</p>
+                        <p id="moisture-status" class="text-lg font-bold flex items-center justify-end gap-1 text-green-400">
+                            <i id="moisture-icon" class="fas fa-check-circle text-sm"></i>
+                            <span id="moisture-text">12%</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Simulasi Keuntungan -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 border border-green-100">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                    <i class="fas fa-chart-line text-green-600"></i>
+                    Simulasi Peningkatan Harga
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500">Harga Jual Asalan</span>
+                        <span id="harga-asalan" class="font-semibold text-gray-700">Rp 45.000 / kg</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b pb-4">
+                        <span class="text-gray-500">Harga Jual Mutu Ini</span>
+                        <span id="harga-mutu" class="font-bold text-[#8b5a2b]">Rp 75.000 / kg</span>
+                    </div>
+                    
+                    <div class="pt-2">
+                        <p class="text-xs text-gray-500 mb-1">Potensi Tambahan Pendapatan (dari <span id="harvest-display">1000</span> Kg)</p>
+                        <div id="profit-display" class="text-3xl font-extrabold text-green-600">
+                            + Rp 30.000.000
+                        </div>
+                        <div id="profit-message" class="text-xs text-green-700 mt-2 bg-green-50 p-2 rounded-md">
+                            *Dengan meluangkan waktu mensortasi kopi ini, Anda bisa mendapat tambahan cuan jutaan rupiah!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Rekomendasi GAP/GHP -->
+            <div id="recommendations-container" class="bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] rounded-2xl shadow-lg p-6 hidden">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                    Saran Perbaikan Kebun (GAP/GHP)
+                </h3>
+                <div id="recommendations-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    <!-- JS will populate recommendations here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Data Standar Defect SNI 01-2907-2008 & Bobot Nilainya
+        const DEFECT_STANDARDS = [
+            { id: 'hitam_utuh', name: 'Biji Hitam Utuh', weight: 1, category: 'Panen & Pasca Panen', desc: 'Petik buah belum matang / busuk, atau telat dikupas.' },
+            { id: 'hitam_sebagian', name: 'Biji Hitam Sebagian', weight: 0.5, category: 'Pasca Panen', desc: 'Proses pengeringan tidak sempurna.' },
+            { id: 'pecah', name: 'Biji Pecah / Belah', weight: 0.2, category: 'Pengolahan', desc: 'Setelan mesin Pulper/Huller terlalu sempit.' },
+            { id: 'berlubang_1', name: 'Biji Berlubang Satu', weight: 0.1, category: 'Kebun (Hama)', desc: 'Serangan Hama PBKO (Penggerek Buah).' },
+            { id: 'berlubang_banyak', name: 'Biji Berlubang > 1', weight: 0.2, category: 'Kebun (Hama)', desc: 'Serangan Hama PBKO parah.' },
+            { id: 'cokelat', name: 'Biji Cokelat / Asam', weight: 0.25, category: 'Pasca Panen', desc: 'Over-fermentasi atau air cucian kotor.' },
+            { id: 'jamur', name: 'Biji Berjamur', weight: 1, category: 'Pasca Panen', desc: 'Jemur di tanah / kehujanan / lembab.' },
+        ];
+
+        // Harga Asumsi (Rupiah per Kg)
+        const hargaAsalan = 45000;
+        const hargaGrade = {
+            'Mutu 1 (Grade 1)': 75000,
+            'Mutu 2 (Grade 2)': 65000,
+            'Mutu 3 (Grade 3)': 55000,
+            'Mutu 4a (Grade 4)': 50000,
+            'Mutu 4b (Grade 4)': 48000,
+            'Asalan (>150)': 45000,
+            'Gagal (Kadar Air Tinggi)': 40000
+        };
+
+        // State variables
+        let defects = {};
+        DEFECT_STANDARDS.forEach(d => defects[d.id] = 0);
+        let moisture = 12;
+        let harvestKg = 1000;
+
+        // Formatter Rupiah
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID').format(number);
+        };
+
+        // Render baris input defect
+        function renderDefectInputs() {
+            const container = document.getElementById('defects-container');
+            container.innerHTML = '';
+
+            DEFECT_STANDARDS.forEach(defect => {
+                const row = document.createElement('div');
+                row.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#8b5a2b] transition-colors';
+                
+                row.innerHTML = `
+                    <div class="mb-3 sm:mb-0">
+                        <h3 class="font-semibold text-gray-800">${defect.name}</h3>
+                        <p class="text-xs text-gray-500">${defect.desc}</p>
+                        <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full mt-1 inline-block">
+                            Bobot: ${defect.weight} poin
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 bg-white rounded-xl border p-1 shadow-sm w-fit">
+                        <button onclick="updateDefect('${defect.id}', -1)" class="w-10 h-10 flex items-center justify-center bg-gray-100 hover:bg-red-100 text-gray-700 rounded-lg font-bold text-xl active:scale-95 transition-all">-</button>
+                        <span id="count-${defect.id}" class="w-8 text-center font-bold text-lg">${defects[defect.id]}</span>
+                        <button onclick="updateDefect('${defect.id}', 1)" class="w-10 h-10 flex items-center justify-center bg-[#8b5a2b] hover:bg-[#6b4420] text-white rounded-lg font-bold text-xl active:scale-95 transition-all">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // Update jumlah cacat
+        window.updateDefect = function(id, amount) {
+            defects[id] = Math.max(0, defects[id] + amount); // Tidak boleh minus
+            document.getElementById(`count-${id}`).innerText = defects[id];
+            calculateAndRender();
+        };
+
+        // Event listeners untuk input lainnya
+        document.getElementById('moisture-slider').addEventListener('input', function(e) {
+            moisture = parseFloat(e.target.value);
+            
+            const display = document.getElementById('moisture-display');
+            display.innerText = `${moisture}%`;
+            if(moisture > 12.5) {
+                display.classList.remove('text-green-600');
+                display.classList.add('text-red-600');
+            } else {
+                display.classList.remove('text-red-600');
+                display.classList.add('text-green-600');
+            }
+            
+            calculateAndRender();
+        });
+
+        document.getElementById('harvest-input').addEventListener('input', function(e) {
+            harvestKg = parseInt(e.target.value) || 0;
+            calculateAndRender();
+        });
+
+        // Fungsi utama kalkulasi dan update UI
+        function calculateAndRender() {
+            // 1. Hitung Total Nilai Cacat
+            let total = 0;
+            DEFECT_STANDARDS.forEach(d => {
+                total += (defects[d.id] * d.weight);
+            });
+            document.getElementById('total-defect-display').innerText = total.toFixed(2);
+
+            // 2. Tentukan Grade
+            let fullGrade = 'Asalan (>150)';
+            if (total <= 11) fullGrade = 'Mutu 1 (Grade 1)';
+            else if (total <= 25) fullGrade = 'Mutu 2 (Grade 2)';
+            else if (total <= 44) fullGrade = 'Mutu 3 (Grade 3)';
+            else if (total <= 80) fullGrade = 'Mutu 4a (Grade 4)';
+            else if (total <= 150) fullGrade = 'Mutu 4b (Grade 4)';
+            
+            if (moisture > 12.5) fullGrade = 'Gagal (Kadar Air Tinggi)';
+            
+            // Pisahkan Grade Main dan Sub untuk UI
+            const parts = fullGrade.split(' (');
+            document.getElementById('grade-main').innerText = parts[0];
+            document.getElementById('grade-sub').innerText = parts.length > 1 ? '(' + parts[1] : '';
+
+            // Update UI Status Moisture
+            const moistureStatus = document.getElementById('moisture-status');
+            const moistureIcon = document.getElementById('moisture-icon');
+            document.getElementById('moisture-text').innerText = `${moisture}%`;
+            
+            if (moisture > 12.5) {
+                moistureStatus.className = 'text-lg font-bold flex items-center justify-end gap-1 text-red-400';
+                moistureIcon.className = 'fas fa-exclamation-triangle text-sm';
+            } else {
+                moistureStatus.className = 'text-lg font-bold flex items-center justify-end gap-1 text-green-400';
+                moistureIcon.className = 'fas fa-check-circle text-sm';
+            }
+
+            // 3. Kalkulasi Ekonomi
+            const currentPrice = hargaGrade[fullGrade] || hargaAsalan;
+            const potensiPendapatan = harvestKg * currentPrice;
+            const pendapatanAsalan = harvestKg * hargaAsalan;
+            const selisihUntung = potensiPendapatan - pendapatanAsalan;
+
+            document.getElementById('harga-asalan').innerText = `Rp ${formatRupiah(hargaAsalan)} / kg`;
+            document.getElementById('harga-mutu').innerText = `Rp ${formatRupiah(currentPrice)} / kg`;
+            document.getElementById('harvest-display').innerText = harvestKg;
+            
+            const profitDisplay = document.getElementById('profit-display');
+            const profitMessage = document.getElementById('profit-message');
+            
+            if (selisihUntung > 0) {
+                profitDisplay.innerText = `+ Rp ${formatRupiah(selisihUntung)}`;
+                profitDisplay.className = 'text-3xl font-extrabold text-green-600';
+                profitMessage.innerText = '*Dengan meluangkan waktu mensortasi kopi ini, Anda bisa mendapat tambahan cuan jutaan rupiah!';
+                profitMessage.className = 'text-xs text-green-700 mt-2 bg-green-50 p-2 rounded-md';
+            } else {
+                profitDisplay.innerText = `+ Rp 0`;
+                profitDisplay.className = 'text-3xl font-extrabold text-gray-500';
+                profitMessage.innerText = '*Mutu saat ini masih setara dengan kopi asalan. Lakukan sortasi untuk meningkatkan harga.';
+                profitMessage.className = 'text-xs text-yellow-700 mt-2 bg-yellow-50 p-2 rounded-md';
+            }
+
+            // 4. Buat Rekomendasi
+            let recs = [];
+            if (defects.hitam_utuh > 2 || defects.hitam_sebagian > 2) {
+                recs.push({ icon: 'fa-leaf text-green-600', title: 'Perbaikan Panen (GAP)', text: 'Pastikan hanya petik buah merah (matang sempurna). Hindari memungut buah busuk dari tanah.' });
+            }
+            if (defects.berlubang_1 > 3 || defects.berlubang_banyak > 1) {
+                recs.push({ icon: 'fa-bug text-yellow-600', title: 'Kendalikan Hama PBKO', text: 'Pasang perangkap hama Brocap/Atraktan di kebun. Lakukan petik rampas sisa buah di akhir panen.' });
+            }
+            if (defects.pecah > 5) {
+                recs.push({ icon: 'fa-cogs text-blue-600', title: 'Kalibrasi Mesin (GHP)', text: 'Biji terlalu banyak pecah. Setel ulang jarak pisau mesin pengupas (Pulper/Huller).' });
+            }
+            if (defects.jamur > 0 || defects.cokelat > 2) {
+                recs.push({ icon: 'fa-tint text-cyan-600', title: 'Perbaikan Fermentasi & Jemur', text: 'Jangan jemur langsung di tanah, gunakan para-para bambu. Pastikan air pencucian bersih.' });
+            }
+            if (moisture > 12.5) {
+                recs.push({ icon: 'fa-exclamation-triangle text-red-600', title: 'Kopi Masih Basah!', text: 'Kadar air di atas 12.5%. Lanjutkan penjemuran. Kopi basah akan cepat berjamur dan ditolak pembeli.' });
+            }
+
+            const recContainer = document.getElementById('recommendations-container');
+            const recList = document.getElementById('recommendations-list');
+            
+            if (recs.length > 0) {
+                recContainer.classList.remove('hidden');
+                recList.innerHTML = recs.map(rec => `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-[#8b5a2b]">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-1"><i class="fas ${rec.icon}"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">${rec.title}</h4>
+                                <p class="text-xs text-gray-600 leading-relaxed">${rec.text}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                recContainer.classList.add('hidden');
+            }
+        }
+
+        // Inisialisasi awal saat halaman dimuat
+        window.onload = () => {
+            renderDefectInputs();
+            calculateAndRender();
+        };
+    </script>
+</body>
+</html>
